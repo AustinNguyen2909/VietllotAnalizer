@@ -51,4 +51,28 @@ const fetchAllVietlottResult55 = async () => {
   }
 }
 
-module.exports = { insertVietlottResult45, fetchAllVietlottResult45, insertVietlottResult55, fetchAllVietlottResult55 };
+const fetchVietlottResultNumb = async (numb = 0, is55 = false) => {
+  const table = is55 ? 'vietlott_results_55' : 'vietlott_results_45';
+  try {
+    const result = await pool.query(`SELECT number1, number2, number3, number4, number5, number6 FROM ${table} WHERE draw_numb = '${numb}';`);
+    const findDraw = result.rows?.length ? Object.values(result.rows[0]) : []; // [{ number1: 1, ..., number6: 45 }, ...]
+    return findDraw;
+  } catch (err) {
+    console.error("Error fetch data:", err);
+    return [];
+  }
+}
+
+const fetchHighestVietlottNumb = async (is55 = false) => {
+  const table = is55 ? 'vietlott_results_55' : 'vietlott_results_45';
+  try {
+    const result = await pool.query(`SELECT draw_numb FROM ${table} ORDER BY draw_numb DESC LIMIT 1;`);
+    const findDraw = result.rows?.length ? result.rows[0]?.draw_numb : 9999; // [{ draw_numb: 1}]
+    return findDraw;
+  } catch (err) {
+    console.error("Error fetch data:", err);
+    return [];
+  }
+}
+
+module.exports = { insertVietlottResult45, fetchAllVietlottResult45, insertVietlottResult55, fetchAllVietlottResult55, fetchVietlottResultNumb, fetchHighestVietlottNumb };
