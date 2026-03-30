@@ -1,4 +1,4 @@
-function pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose) {
+function pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList) {
   // Invert orderMap to get a list: index = order, value = number
   const orderToNumber = [];
   for (const [num, order] of Object.entries(orderMap)) {
@@ -47,13 +47,13 @@ function pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose) {
 
   // If gap pattern already existed => choose again
   if (gapList?.length && gapList.includes(patternKey)) {
-    return pick6NumbersByOrder(orderMap, gapList, numberKeyList)
+    return pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList)
   }
 
   const resultKey = result.join(',');
-   // If result already existed => choose again
-   if (numberKeyList?.length && numberKeyList?.includes(resultKey)) {
-    return pick6NumbersByOrder(orderMap, gapList, numberKeyList)
+  // If result already existed => choose again
+  if (numberKeyList?.length && numberKeyList?.includes(resultKey)) {
+    return pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList)
   }
 
   const gapTotal = gaps.reduce((total, next) => {
@@ -62,7 +62,18 @@ function pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose) {
   // If gap total value is larger than the ranges of frequently appear gap (Get from Most Common Gap Patterns)
   // Then we choose again
   if (rangesToChoose?.length === 2 && (gapTotal < rangesToChoose?.[0] || gapTotal > rangesToChoose?.[1])) {
-    return pick6NumbersByOrder(orderMap, gapList, numberKeyList)
+    return pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList)
+  }
+
+  // If the lowest value is higher than the lowNumberBottomLine or the highest value is lower than the highNumberBottomLine
+  // Then we choose again
+  if (typeof lowNumberBottomLine === 'number' && typeof highNumberBottomLine === 'number' && (result[0] > lowNumberBottomLine || result[5] < highNumberBottomLine)) {
+    // Unless this result is in the exception list created from keypair of first and last number
+    // Then we return it
+    if (exeptionList?.length && exeptionList.includes(`${result[0]}-${result[5]}`)) {
+      return result;
+    }
+    return pick6NumbersByOrder(orderMap, gapList, numberKeyList, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList)
   }
 
   return result;
