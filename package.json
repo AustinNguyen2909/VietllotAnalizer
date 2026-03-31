@@ -7,6 +7,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
+    "dev:api": "ts-node src/api/server.ts",
+    "start:api": "node dist/api/server.js",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,10 +23,12 @@
   "dependencies": {
     "cheerio": "^1.0.0",
     "dotenv": "^16.4.7",
+    "express": "^5.2.1",
     "pg": "^8.14.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.0",
     "eslint": "^10.1.0",

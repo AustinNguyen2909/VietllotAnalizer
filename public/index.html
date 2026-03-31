@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vietlott Analyzer</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Vietlott Analyzer</h1>
+    <nav>
+      <button class="tab-btn active" data-tab="results">Results</button>
+      <button class="tab-btn" data-tab="analysis">Analysis</button>
+      <button class="tab-btn" data-tab="generate">Generate</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Results Tab -->
+    <section id="results" class="tab-content active">
+      <div class="controls">
+        <select id="results-game-type">
+          <option value="45">Mega 6/45</option>
+          <option value="55">Power 6/55</option>
+          <option value="35">Max 3D+ 5/35</option>
+        </select>
+        <button id="sync-btn" class="btn btn-primary">Sync Latest</button>
+        <button id="load-results-btn" class="btn">Load Results</button>
+      </div>
+      <div id="sync-status" class="status-box hidden"></div>
+      <div id="results-container">
+        <p class="placeholder">Select a game type and click "Load Results"</p>
+      </div>
+    </section>
+
+    <!-- Analysis Tab -->
+    <section id="analysis" class="tab-content">
+      <div class="controls">
+        <select id="analysis-game-type">
+          <option value="45">Mega 6/45</option>
+          <option value="55">Power 6/55</option>
+          <option value="35">Max 3D+ 5/35</option>
+        </select>
+        <button id="analyze-btn" class="btn btn-primary">Run Analysis</button>
+      </div>
+      <div id="analysis-container">
+        <p class="placeholder">Select a game type and click "Run Analysis"</p>
+      </div>
+    </section>
+
+    <!-- Generate Tab -->
+    <section id="generate" class="tab-content">
+      <div class="controls">
+        <select id="generate-game-type">
+          <option value="45">Mega 6/45</option>
+          <option value="55">Power 6/55</option>
+        </select>
+        <button id="generate-btn" class="btn btn-primary">Generate Numbers</button>
+      </div>
+      <div id="generate-container">
+        <p class="placeholder">Select a game type and click "Generate Numbers"</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="loading" class="loading hidden">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

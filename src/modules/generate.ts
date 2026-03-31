@@ -1,4 +1,4 @@
-import { GameConfig, FrequencyAppearanceMap, GenerationConfig } from "../types";
+import { GameConfig, FrequencyAppearanceMap, GenerationConfig, GenerationResult } from "../types";
 import {
   fetchAllResults,
   fetchResultByDrawNumb,
@@ -39,9 +39,7 @@ const buildFrequencyAppearanceMap = (
 export const generateNumbers = async (
   config: GameConfig,
   generationConfig: GenerationConfig
-): Promise<void> => {
-  console.log(`--------${config.gameType}--------`);
-
+): Promise<GenerationResult> => {
   const vietlottData = await fetchAllResults(config);
   const topGapPatterns = getMostCommonGapPatterns(vietlottData);
   const gapPatternList = Object.keys(topGapPatterns.gapPatternMap);
@@ -53,22 +51,18 @@ export const generateNumbers = async (
   );
 
   const likelihoodResults = calculateLikelihood(mapFrequencyAndAppearanceValue);
-  const randomPick = pick6NumbersByOrder(
+  const numbers = pick6NumbersByOrder(
     likelihoodResults,
     gapPatternList,
     numberKeyList,
     generationConfig
   );
-  console.log("randomPickLikelihood 1", randomPick);
 
-  const mySpecialNumber = [5, 7, 9, 15, 19, 30];
-  const mySpecialNumberString = mySpecialNumber.join(",");
-  console.log(
-    `Has my number - ${mySpecialNumber.toString()} been called?`,
-    numberKeyList.includes(mySpecialNumberString)
-  );
-
-  console.log(`--------${config.gameType}--------`);
+  return {
+    gameType: config.gameType,
+    numbers,
+    config: generationConfig,
+  };
 };
 
 export const testNumberOfRandomPick = async (
