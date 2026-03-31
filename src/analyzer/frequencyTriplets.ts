@@ -1,5 +1,9 @@
-function getFrequentTriplets(results) {
-  const tripletCounts = {};
+import { DrawHistory } from "../types";
+
+export function getFrequentTriplets(
+  results: DrawHistory
+): [string, number][] {
+  const tripletCounts: Record<string, number> = {};
 
   for (const draw of results) {
     const sorted = draw.slice().sort((a, b) => a - b);
@@ -13,12 +17,7 @@ function getFrequentTriplets(results) {
     }
   }
 
-  const tripletsSorted = Object.entries(tripletCounts)
+  return Object.entries(tripletCounts)
     .sort((a, b) => b[1] - a[1])
-    .slice(0, 10); // top 10 frequent triplets
-
-  return tripletsSorted;
+    .slice(0, 10);
 }
-
-// Call the function
-module.exports = { getFrequentTriplets };
