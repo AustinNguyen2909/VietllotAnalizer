@@ -1,4 +1,5 @@
 import { GameConfig, AnalysisResult } from "../types";
+import { requireAuth } from "../utils/supabase";
 import { fetchAllResults } from "./resultService";
 import {
   getNumberFrequencies,
@@ -11,6 +12,8 @@ import { getHotAndColdNumbers } from "../analyzer/hotAndColdNumbers";
 export async function analyzeGame(
   config: GameConfig
 ): Promise<AnalysisResult> {
+  await requireAuth();
+
   const vietlottData = await fetchAllResults(config);
 
   const gapPatterns = getMostCommonGapPatterns(vietlottData);

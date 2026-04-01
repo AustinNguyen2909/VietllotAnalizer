@@ -1,10 +1,12 @@
-import { supabase } from "../utils/supabase";
+import { supabase, requireAuth } from "../utils/supabase";
 import { DrawHistory, GameConfig, GameType, SyncStatus } from "../types";
 import { GAME_CONFIGS } from "../config/gameConfig";
 
 export async function fetchAllResults(
   gameConfig: GameConfig
 ): Promise<DrawHistory> {
+  await requireAuth();
+
   const columns = [...gameConfig.numberColumns, "draw_numb"].join(", ");
   const PAGE_SIZE = 1000;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +40,8 @@ export async function fetchAllResults(
 export async function fetchHighestDrawNumb(
   gameConfig: GameConfig
 ): Promise<number> {
+  await requireAuth();
+
   const { data, error } = await supabase
     .from(gameConfig.tableName)
     .select("draw_numb")
@@ -55,6 +59,8 @@ export async function fetchResultByDrawNumb(
   gameConfig: GameConfig,
   drawNumb: number
 ): Promise<number[]> {
+  await requireAuth();
+
   const columns = gameConfig.numberColumns.join(", ");
 
   const { data, error } = await supabase
@@ -76,6 +82,8 @@ export async function fetchResultByDrawNumb(
 export async function syncResults(
   gameType: GameType
 ): Promise<SyncStatus> {
+  await requireAuth();
+
   const { data, error } = await supabase.functions.invoke("sync-results", {
     body: { gameType },
   });
@@ -88,6 +96,8 @@ export async function syncResults(
 }
 
 export async function syncAllResults(): Promise<SyncStatus[]> {
+  await requireAuth();
+
   const results: SyncStatus[] = [];
   for (const gameType of Object.keys(GAME_CONFIGS) as GameType[]) {
     const status = await syncResults(gameType);
