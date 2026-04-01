@@ -4,6 +4,7 @@ import {
   GenerationConfig,
   GenerationResult,
 } from "../types";
+import { requireAuth } from "../utils/supabase";
 import { fetchAllResults } from "./resultService";
 import { getNumberFrequencies } from "../analyzer/frequencyAnalysis";
 import { getMostCommonGapPatterns } from "../analyzer/gapAnalysis";
@@ -41,6 +42,8 @@ export async function generateNumbers(
   config: GameConfig,
   generationConfig: GenerationConfig
 ): Promise<GenerationResult> {
+  await requireAuth();
+
   const vietlottData = await fetchAllResults(config);
   const topGapPatterns = getMostCommonGapPatterns(vietlottData);
   const gapPatternList = Object.keys(topGapPatterns.gapPatternMap);
