@@ -58,3 +58,32 @@ export interface VietlottApiResponse {
     RetExtraParam1: string;
   };
 }
+
+// API response types
+
+export interface AnalysisResult {
+  gameType: GameType;
+  gapPatterns: GapAnalysis;
+  frequencies: FrequencyMap;
+  firstPositionFrequencies: FrequencyMap;
+  lastPositionFrequencies: FrequencyMap;
+  twoPositionFrequencies: FrequencyMap;
+  hotCold: HotColdResult;
+}
+
+export interface GenerationResult {
+  gameType: GameType;
+  numbers: number[];
+  config: GenerationConfig;
+}
+
+export interface SyncStatus {
+  gameType: GameType;
+  newDraws: number;
+  highestDrawNumb: number;
+}
+
+export interface NumberCheckResult {
+  numbers: number[];
+  found: boolean;
+}
