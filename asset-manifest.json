@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/VietlottAnalizer/static/css/main.141c8699.css",
+    "main.js": "/VietlottAnalizer/static/js/main.6cf9551c.js",
+    "index.html": "/VietlottAnalizer/index.html",
+    "main.141c8699.css.map": "/VietlottAnalizer/static/css/main.141c8699.css.map",
+    "main.6cf9551c.js.map": "/VietlottAnalizer/static/js/main.6cf9551c.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.141c8699.css",
+    "static/js/main.6cf9551c.js"
+  ]
+}
