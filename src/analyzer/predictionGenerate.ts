@@ -57,7 +57,7 @@ export function predictNextNumbers(
     .sort((a, b) => b[1] - a[1])
     .map(([gap]) => parseInt(gap, 10));
   if (gapsSorted.length > 0 && selectedNumbers.size > 0) {
-    const last = [...selectedNumbers][selectedNumbers.size - 1];
+    const last = Array.from(selectedNumbers)[selectedNumbers.size - 1];
     const candidate = last + gapsSorted[0];
     if (candidate <= 45) selectedNumbers.add(candidate);
   }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-A TypeScript application that scrapes Vietnamese lottery (Vietlott) draw results from the official website, stores them in PostgreSQL, and performs statistical analysis to generate number predictions. Includes both a CLI entry point and a web-based admin UI with REST API.
+A React + TypeScript application that displays Vietnamese lottery (Vietlott) draw results from Supabase, performs statistical analysis, and generates number predictions — all running client-side. Syncing new results from Vietlott's website is handled by a Supabase Edge Function.
 
 Supports three lottery games:
 - **Mega 6/45** — pick 6 numbers from 1-45
@@ -11,129 +11,102 @@ Supports three lottery games:
 
 ## Tech Stack
 
-- **Language**: TypeScript (strict mode, ES2022 target)
-- **Runtime**: Node.js 18+
-- **API**: Express 5
-- **Frontend**: Vanilla HTML/CSS/JS (no build step)
-- **Database**: PostgreSQL 15 (via Docker)
-- **Linting**: ESLint with `typescript-eslint`
-- **Dependencies**: `express`, `cheerio` (HTML parsing), `pg` (Postgres client), `dotenv`
+- **Language**: TypeScript
+- **Frontend**: React (Create React App)
+- **Database**: Supabase (PostgreSQL) via `@supabase/supabase-js`
+- **Sync**: Supabase Edge Function (Deno) for scraping Vietlott
+- **Deployment**: GitHub Pages via `gh-pages`
 
 ## Project Structure
 
 ```
 src/
-  types/index.ts                    # Shared types: GameType, GameConfig, Draw, AnalysisResult, etc.
+  index.tsx                          # React entry point
+  App.tsx                            # Tab layout (Results, Analysis, Generate)
+  App.css                            # Global styles
+  utils/
+    supabase.ts                      # Supabase client (createClient)
+  types/
+    index.ts                         # Shared types: GameType, GameConfig, AnalysisResult, etc.
   config/
-    config.ts                       # DB config from .env
-    gameConfig.ts                   # GAME_CONFIGS — per-game-type URL, table, columns, etc.
-    generationConfig.ts             # GENERATION_CONFIGS — per-game generation parameters
-  modules/
-    result.ts                       # Result module: fetchAndSaveAllResults, checkIfNumberIsDrawn
-    analyze.ts                      # Analyze module: analyzeGame → returns AnalysisResult
-    generate.ts                     # Generate module: generateNumbers → returns GenerationResult
-  api/
-    server.ts                       # Express app — serves API + static frontend
-    middleware.ts                   # validateGameType, errorHandler
-    routes/
-      resultRoutes.ts              # /api/results — sync, fetch, check
-      analysisRoutes.ts            # /api/analysis — run analysis
-      generateRoutes.ts            # /api/generate — generate numbers
-  fetcher/
-    fetcher.ts                      # Generic fetchVietlottData(config, drawNumb)
-    parser.ts                       # parseStandardDraw (6/45), parseBonusDraw (6/55, 5/35)
-  storage/
-    storage.ts                      # Generic: insertResult, fetchAllResults, fetchHighestDrawNumb, fetchResultByDrawNumb
-  analyzer/
-    frequencyAnalysis.ts            # Overall, single-position, and two-position frequency counts
-    frequencyPairs.ts               # Top 10 most frequent number pairs
-    frequencyTriplets.ts            # Top 10 most frequent number triplets
-    gapAnalysis.ts                  # Gap patterns between consecutive sorted numbers
-    appearanceAnalysis.ts           # Tracks consecutive draws each number has NOT appeared
-    hotAndColdNumbers.ts            # Identifies hottest and coldest numbers
-    likelihoodAnalysis.ts           # Ranks numbers by likelihood (low frequency + high absence)
-    pickNumberRandom.ts             # Weighted random picker with gap/duplicate/range constraints
-    numberKeyList.ts                # Generates sorted key strings for each draw (uniqueness checks)
-    predictionGenerate.ts           # Composite predictor combining hot/cold, pairs, triplets, gaps
+    gameConfig.ts                    # GAME_CONFIGS — per-game-type table, columns, etc.
+    generationConfig.ts              # GENERATION_CONFIGS — per-game generation parameters
+  services/
+    resultService.ts                 # Fetch results from Supabase, invoke sync edge function
+    analysisService.ts               # Run analysis on fetched data (client-side computation)
+    generateService.ts               # Generate numbers using fetched data (client-side computation)
+  components/
+    ResultsTab.tsx                   # Results tab — view draws, sync new data
+    AnalysisTab.tsx                  # Analysis tab — frequency, hot/cold, gap patterns
+    GenerateTab.tsx                  # Generate tab — weighted random number generation
+    LoadingSpinner.tsx               # Shared loading overlay
+  analyzer/                          # Pure computation modules (no external dependencies)
+    frequencyAnalysis.ts             # Overall, single-position, and two-position frequency counts
+    frequencyPairs.ts                # Top 10 most frequent number pairs
+    frequencyTriplets.ts             # Top 10 most frequent number triplets
+    gapAnalysis.ts                   # Gap patterns between consecutive sorted numbers
+    appearanceAnalysis.ts            # Tracks consecutive draws each number has NOT appeared
+    hotAndColdNumbers.ts             # Identifies hottest and coldest numbers
+    likelihoodAnalysis.ts            # Ranks numbers by likelihood (low frequency + high absence)
+    pickNumberRandom.ts              # Weighted random picker with gap/duplicate/range constraints
+    numberKeyList.ts                 # Generates sorted key strings for each draw
+    predictionGenerate.ts            # Composite predictor combining hot/cold, pairs, triplets, gaps
   generator/
-    randomGapNumber.ts              # Generates numbers with a target gap sum
-  index.ts                          # CLI entry point — calls modules, manages DB pool lifecycle
-public/
-  index.html                        # Admin UI — single-page with 3 tabs
-  css/style.css                     # Styling
-  js/app.js                         # Frontend JS — API calls, DOM rendering
-db/migrations/001_init.up.sql       # Schema: vietlott_results_45, _55, _35 tables
-docker-compose.yml                  # PostgreSQL container setup (reads from .env)
-tsconfig.json                       # TypeScript compiler configuration
-eslint.config.mjs                   # ESLint flat config with typescript-eslint rules
+    randomGapNumber.ts               # Generates numbers with a target gap sum
+supabase/
+  functions/
+    sync-results/
+      index.ts                       # Edge Function: scrape Vietlott, insert into Supabase
 ```
 
 ## Architecture
 
-All game types share the same logic, parameterized by `GameConfig` — no code duplication.
+**Client-side only** — no backend server. The React app connects directly to Supabase for data.
 
-**Modules** return structured data (not console.log), making them reusable by both CLI and API:
-- **result** — fetching/persisting draw data → `SyncStatus`
-- **analyze** — statistical analysis → `AnalysisResult`
-- **generate** — number prediction → `GenerationResult`
-
-**Two entry points:**
-- `src/index.ts` — CLI that calls modules and logs results
-- `src/api/server.ts` — Express server that wraps modules as REST endpoints
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/results/sync` | Sync all game types |
-| POST | `/api/results/sync/:gameType` | Sync a single game type |
-| GET | `/api/results/:gameType` | Get all draw results |
-| GET | `/api/results/:gameType/:drawNumb` | Get single draw result |
-| POST | `/api/results/:gameType/check` | Check if numbers were drawn |
-| GET | `/api/analysis/:gameType` | Run full analysis |
-| POST | `/api/generate/:gameType` | Generate numbers (optional config in body) |
+- **Reading data**: `@supabase/supabase-js` queries PostgreSQL tables directly
+- **Analysis & generation**: All 11 analyzer modules are pure TypeScript computation that runs in the browser
+- **Syncing new draws**: A Supabase Edge Function scrapes Vietlott's website and inserts new rows. Invoked from React via `supabase.functions.invoke()`.
 
 ## Running
 
 ```sh
-docker compose up -d          # Start PostgreSQL (uses .env)
 npm install
-
-# CLI mode
-npm run build                 # Compile TypeScript
-npm start                     # Run CLI (dist/index.js)
-npm run dev                   # Run CLI with ts-node
-
-# Web mode
-npm run dev:api               # Start API server with ts-node (http://localhost:3000)
-npm run start:api             # Start compiled API server (dist/api/server.js)
+npm start              # Dev server at http://localhost:3000
+npm run build          # Production build to build/
+npm run deploy         # Deploy to GitHub Pages
 ```
 
-## Linting
+## Environment Variables
 
+Create `.env.local` (not committed):
+```
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-publishable-key
+```
+
+## Supabase Edge Function
+
+The `sync-results` edge function lives in `supabase/functions/sync-results/`. Deploy it with:
 ```sh
-npm run lint                  # Check for lint errors
-npm run lint:fix              # Auto-fix lint errors
+supabase functions deploy sync-results
 ```
 
-Key ESLint rules enforced:
-- `@typescript-eslint/no-unused-vars` — no unused variables (allows `_` prefix)
-- `@typescript-eslint/no-explicit-any` — warns on `any` usage
-- `prefer-const`, `no-var`, `eqeqeq` — code consistency
-- `no-duplicate-imports`, `no-unreachable` — error prevention
+It uses `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` (auto-injected by Supabase runtime).
 
-## Configuration
+## Deployment
 
-Database connection via `.env` file (not committed, covered by `.gitignore`):
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
-- `PORT` — API server port (default: 3000)
+GitHub Pages deployment:
+```sh
+npm run build    # Compile React to static files
+npm run deploy   # Push build/ to gh-pages branch
+```
 
-The `docker-compose.yml` reads these same variables from `.env` — no hardcoded credentials.
+Set `"homepage"` in `package.json` to your GitHub Pages URL if using a custom path.
 
 ## Development Notes
 
-- The fetcher uses hardcoded browser headers — session cookies/CSRF tokens may expire and need refreshing
+- The analyzer modules are pure computation with zero browser/Node dependencies
 - `pick6NumbersByOrder` and `generateFiveNumbersWithGapSum` have recursion with max-retry guards (default 1000)
-- No test suite exists (`npm test` is a no-op)
 - The `predictionGenerate.ts` analyzer is available but not called in the default flows
-- The admin UI is vanilla HTML/CSS/JS served as static files — no frontend build step needed
+- No test suite exists (`npm test` runs CRA's default test runner)
+- The Vietlott fetcher in the edge function uses hardcoded browser headers — session cookies/CSRF tokens may expire

@@ -1,5 +1,5 @@
 import { GameConfig, AnalysisResult } from "../types";
-import { fetchAllResults } from "../storage/storage";
+import { fetchAllResults } from "./resultService";
 import {
   getNumberFrequencies,
   getSingleNumberFrequencies,
@@ -8,9 +8,9 @@ import {
 import { getMostCommonGapPatterns } from "../analyzer/gapAnalysis";
 import { getHotAndColdNumbers } from "../analyzer/hotAndColdNumbers";
 
-export const analyzeGame = async (
+export async function analyzeGame(
   config: GameConfig
-): Promise<AnalysisResult> => {
+): Promise<AnalysisResult> {
   const vietlottData = await fetchAllResults(config);
 
   const gapPatterns = getMostCommonGapPatterns(vietlottData);
@@ -37,4 +37,4 @@ export const analyzeGame = async (
     twoPositionFrequencies,
     hotCold,
   };
-};
+}

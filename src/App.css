@@ -59,14 +59,6 @@ main {
   padding: 0 1rem;
 }
 
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
 .controls {
   display: flex;
   gap: 0.75rem;
@@ -124,10 +116,6 @@ select {
   background: #fce8e6;
   color: #c5221f;
   border: 1px solid #f5c6cb;
-}
-
-.hidden {
-  display: none !important;
 }
 
 .placeholder {
