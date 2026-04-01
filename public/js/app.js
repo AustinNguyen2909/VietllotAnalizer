@@ -1,3 +1,6 @@
+// Start preloading results as soon as the page is ready
+document.addEventListener("DOMContentLoaded", preloadAllResults);
+
 // Tab navigation
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
@@ -39,6 +42,54 @@ async function apiCall(url, options = {}) {
 
 // ========== RESULTS TAB ==========
 
+// Cache: store loaded results per game type so we never fetch twice
+const resultsCache = {};
+
+async function loadResultsForGameType(gameType) {
+  if (resultsCache[gameType]) {
+    renderResults(resultsCache[gameType], gameType);
+    return;
+  }
+  try {
+    const results = await apiCall(`/api/results/${gameType}`);
+    resultsCache[gameType] = results;
+    renderResults(results, gameType);
+  } catch (_) {
+    // Error already shown by apiCall
+  }
+}
+
+// Preload all game types on page load
+async function preloadAllResults() {
+  const gameTypes = ["45", "55", "35"];
+  // Load all in parallel, silently — no loading spinner per individual call
+  await Promise.all(gameTypes.map(async (gameType) => {
+    try {
+      const res = await fetch(`/api/results/${gameType}`, {
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (data.success) {
+        resultsCache[gameType] = data.data;
+      }
+    } catch (_) {
+      // Silently ignore preload failures; user can still trigger manually
+    }
+  }));
+
+  // Render whichever game type is currently selected
+  const selected = document.getElementById("results-game-type").value;
+  if (resultsCache[selected]) {
+    renderResults(resultsCache[selected], selected);
+  }
+}
+
+// Auto-render from cache when select changes
+document.getElementById("results-game-type").addEventListener("change", () => {
+  const gameType = document.getElementById("results-game-type").value;
+  loadResultsForGameType(gameType);
+});
+
 document.getElementById("sync-btn").addEventListener("click", async () => {
   const gameType = document.getElementById("results-game-type").value;
   try {
@@ -47,6 +98,9 @@ document.getElementById("sync-btn").addEventListener("click", async () => {
     statusBox.classList.remove("hidden", "error");
     statusBox.classList.add("success");
     statusBox.textContent = `Synced ${result.newDraws} new draw(s) for game ${result.gameType}. Highest draw: #${result.highestDrawNumb}`;
+    // Invalidate cache and reload for this game type after sync
+    delete resultsCache[gameType];
+    await loadResultsForGameType(gameType);
   } catch (_) {
     const statusBox = document.getElementById("sync-status");
     statusBox.classList.remove("hidden", "success");
@@ -57,12 +111,9 @@ document.getElementById("sync-btn").addEventListener("click", async () => {
 
 document.getElementById("load-results-btn").addEventListener("click", async () => {
   const gameType = document.getElementById("results-game-type").value;
-  try {
-    const results = await apiCall(`/api/results/${gameType}`);
-    renderResults(results, gameType);
-  } catch (_) {
-    // Error already shown by apiCall
-  }
+  // Force refresh: clear cache for this game type
+  delete resultsCache[gameType];
+  await loadResultsForGameType(gameType);
 });
 
 function renderResults(results, gameType) {
