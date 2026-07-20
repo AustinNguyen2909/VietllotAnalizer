@@ -8,6 +8,8 @@ const { calculateLikelihood } = require("./src/analizer/likelyhoodAnalize");
 const { pick6NumbersByOrder } = require("./src/analizer/pickNumberRandom");
 const { getNumberKeyList } = require("./src/analizer/numberKeyList");
 
+const { previousNumberAnalizer } = require("./src/analizer/previousNumberAnalizer");
+
 const fetchAndSaveResult45 = async () => {
   let drawNumb = await fetchHighestVietlottNumb();
   let dataFetch = {}
@@ -75,10 +77,44 @@ const checkIfNumberIsDrawnOn35 = async () => {
   // listRandomPick.forEach(numberList => checkNumberShown(numberList))
 }
 
-const mega45Analize = async () => {
-  console.log('--------45--------')
+const TYPE_CONFIG = {
+  '45': {
+    fetchAll: fetchAllVietlottResult45,
+    rangesToChoose: [24, 42],
+    lowNumberBottomLine: 7,
+    highNumberBottomLine: 41,
+    exeptionList: ['9-41', '2-38', '1-40'],
+    // randomGap args: generateFiveNumbersWithGapSum(35, 3, gapPaternList)
+    /*
+     * This shown that key pair with at least 1% of the number of total draws (13 times appearance)
+     * are at most 7 on lower threshold
+     * with exeption of 9-41
+     * and 41 on higher threshold
+     * with exeption of 2-38, 1-40
+     */
+  },
+  '55': {
+    fetchAll: fetchAllVietlottResult55,
+    rangesToChoose: [34, 51],
+    lowNumberBottomLine: 7,
+    highNumberBottomLine: 49,
+    exeptionList: ['8-54', '9-54', '12-52', '12-53', '1-50'],
+    // randomGap args: generateFiveNumbersWithGapSum(42, 4, gapPaternList)
+    /*
+     * This shown that key pair with at least 0.67% of the number of total draws (8 times appearance)
+     * are at most 7 on lower threshold
+     * with exeption of 8-54, 9-54, 12-52, 12-53
+     * and 49 on higher threshold
+     * with exeption of 1-50
+     */
+  },
+}
 
-  const vietlottData = await fetchAllVietlottResult45()
+const megaAnalize = async (type) => {
+  console.log(`--------${type}--------`)
+
+  const { fetchAll } = TYPE_CONFIG[type]
+  const vietlottData = await fetchAll()
 
   const topGapPatterns = getMostCommonGapPatterns(vietlottData)
   console.log("🔥 Most Common Gap Patterns:", transformGapNumberToDot(topGapPatterns.gapPatternValueMap))
@@ -101,25 +137,21 @@ const mega45Analize = async () => {
   // Convert it back to an object
   const sortedObject = Object.fromEntries(sortedEntries)
   console.log('frequenciesValues2Num 1-6', sortedObject)
-  /* 
-   * This shown that key pair with at least 1% of the number of total draws (13 times appearance)
-   * are at most 7 on lower threshold
-   * with exeption of 9-41
-   * and 41 on higher threshold
-   * with exeption of 2-38, 1-40
-   */
+  // See TYPE_CONFIG[type] block comment for the observed pair-threshold notes per type.
 
-  console.log('--------45--------')
+  console.log(`--------${type}--------`)
 }
 
-const generateNumberFor45 = async () => {
-  console.log('--------45--------')
+const generateNumberFor = async (type) => {
+  console.log(`--------${type}--------`)
 
-  const vietlottData = await fetchAllVietlottResult45()
+  const { fetchAll, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList } = TYPE_CONFIG[type]
+
+  const vietlottData = await fetchAll()
   const topGapPatterns = getMostCommonGapPatterns(vietlottData);
   const gapPaternList = Object.keys(topGapPatterns.gapPatternMap);
   const numberKeyList = getNumberKeyList(vietlottData);
-  // const randomGap = generateFiveNumbersWithGapSum(35, 3, gapPaternList)
+  // const randomGap = generateFiveNumbersWithGapSum(...) // see TYPE_CONFIG[type] for args
   // console.log('randomGap', randomGap)
 
   const frequenciesValues = getNumberFrequencies(vietlottData)
@@ -137,101 +169,15 @@ const generateNumberFor45 = async () => {
     }
   })
 
-  const rangesToChoose = [24, 42]
-
-  const lowNumberBottomLine = 7
-  const highNumberBottomLine = 41
-
-  const exeptionList = ['9-41', '2-38', '1-40']
-
   const likelyHoodResults = calculateLikelihood(mapFrequencyAndAppearanceValue)
-  const randomPickLikelyHood1 = pick6NumbersByOrder(likelyHoodResults, gapPaternList, numberKeyList, rangesToChoose) // , lowNumberBottomLine, highNumberBottomLine, exeptionList)
+  const randomPickLikelyHood1 = pick6NumbersByOrder(likelyHoodResults, [], numberKeyList) // , rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList)
   console.log('randomPickLikelyHood 1', randomPickLikelyHood1)
   // const randomPickLikelyHood2 = pick6NumbersByOrder(likelyHoodResults, gapPaternList, numberKeyList, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList)
   // console.log('randomPickLikelyHood 2', randomPickLikelyHood2)
   const mySpecialNumber = [5, 7, 9, 15, 19, 30];
   const mySpecialNumberString = mySpecialNumber.join(',');
   console.log(`Has my number - ${mySpecialNumber.toString()} been called?`, numberKeyList.includes(mySpecialNumberString));
-  console.log('--------45--------')
-}
-
-const mega55Analize = async () => {
-  console.log('--------55--------')
-
-  const vietlottData = await fetchAllVietlottResult55()
-
-  // const topGapPatterns = getMostCommonGapPatterns(vietlottData)
-  // console.log("🔥 Most Common Gap Patterns:", transformGapNumberToDot(topGapPatterns.gapPatternValueMap))
-
-  // const frequenciesValues = getNumberFrequencies(vietlottData)
-  // console.log('frequenciesValues',  transformGapNumberToDot(frequenciesValues))
-
-  // const frequenciesValues0 = getSingleNumberFrequencies(vietlottData, 0)
-  // console.log('frequenciesValues 1', transformGapNumberToDot(frequenciesValues0))
-
-  // const frequenciesValues5 = getSingleNumberFrequencies(vietlottData, 5)
-  // console.log('frequenciesValues 6', transformGapNumberToDot(frequenciesValues5))
-
-  const frequenciesValues2Num = getTwoNumberFrequencies(vietlottData, 0, 5)
-  const keyByDots = transformGapNumberToDot(frequenciesValues2Num)
-  // Convert the object to an array of [key, value] pairs
-  const sortedEntries = Object.entries(keyByDots).sort((a, b) => {
-    return b[1].length - a[1].length; // Sort by number of dots (descending)
-  });
-  // Convert it back to an object
-  const sortedObject = Object.fromEntries(sortedEntries)
-  console.log('frequenciesValues2Num 1-6', sortedObject)
-  /* 
-   * This shown that key pair with at least 0.67% of the number of total draws (8 times appearance)
-   * are at most 7 on lower threshold
-   * with exeption of 8-54, 9-54, 12-52, 12-53
-   * and 49 on higher threshold
-   * with exeption of 1-50
-   */
-
-  console.log('--------55--------')
-}
-
-const generateNumberFor55 = async () => {
-  console.log('--------55--------')
-  const vietlottData = await fetchAllVietlottResult55()
-  const topGapPatterns = getMostCommonGapPatterns(vietlottData);
-  const gapPaternList = Object.keys(topGapPatterns.gapPatternMap);
-  const numberKeyList = getNumberKeyList(vietlottData);
-  // const randomGap = generateFiveNumbersWithGapSum(42, 4, gapPaternList)
-  // console.log('randomGap', randomGap)
-
-  const frequenciesValues = getNumberFrequencies(vietlottData)
-  const numberAppearence = getNumberAppearance(vietlottData);
-  const mapFrequencyAndAppearanceValue = {}
-  Object.keys(frequenciesValues).forEach(key => {
-    mapFrequencyAndAppearanceValue[key] = {
-      frequency: frequenciesValues[key]
-    }
-  })
-  Object.keys(numberAppearence).forEach(key => {
-    mapFrequencyAndAppearanceValue[key] = {
-      ...mapFrequencyAndAppearanceValue[key],
-      hasNot: numberAppearence[key]
-    }
-  })
-
-  const rangesToChoose = [34, 51]
-
-  const lowNumberBottomLine = 7
-  const highNumberBottomLine = 49
-
-  const exeptionList = ['8-54', '9-54', '12-52', '12-53', '1-50']
-
-  const likelyHoodResults = calculateLikelihood(mapFrequencyAndAppearanceValue)
-  const randomPickLikelyHood1 = pick6NumbersByOrder(likelyHoodResults, gapPaternList, numberKeyList, rangesToChoose) // , lowNumberBottomLine, highNumberBottomLine, exeptionList)
-  console.log('randomPickLikelyHood 1', randomPickLikelyHood1)
-  // const randomPickLikelyHood2 = pick6NumbersByOrder(likelyHoodResults, gapPaternList, numberKeyList, rangesToChoose, lowNumberBottomLine, highNumberBottomLine, exeptionList)
-  // console.log('randomPickLikelyHood 2', randomPickLikelyHood2)
-  const mySpecialNumber = [5, 7, 9, 15, 19, 30];
-  const mySpecialNumberString = mySpecialNumber.join(',');
-  console.log(`Has my number - ${mySpecialNumber.toString()} been called?`, numberKeyList.includes(mySpecialNumberString));
-  console.log('--------55--------')
+  console.log(`--------${type}--------`)
 }
 
 const testNumberOfRandomPick = async (number = 10, draw = 1000) => {
@@ -301,10 +247,10 @@ const main = async () => {
   // await runTest()
   await fetAndSaveAllResults()
   await checkIfNumberIsDrawnOn35()
-  // await mega45Analize()
-  // await mega55Analize()
-  await generateNumberFor45()
-  await generateNumberFor55()
+  // await megaAnalize('45')
+  // await megaAnalize('55')
+  await generateNumberFor('45')
+  await generateNumberFor('55')
 };
 
 main();

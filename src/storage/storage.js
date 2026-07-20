@@ -88,6 +88,25 @@ const fetchVietlottResultNumb = async (numb = 0, is55 = false) => {
   }
 }
 
+const fetchVietlottResultsInRange = async (minNumb, maxNumb, is55 = false) => {
+  const table = is55 ? 'vietlott_results_55' : 'vietlott_results_45';
+  try {
+    const result = await pool.query(
+      `SELECT draw_numb, number1, number2, number3, number4, number5, number6 FROM ${table} WHERE draw_numb >= $1 AND draw_numb <= $2`,
+      [minNumb, maxNumb]
+    );
+    const map = {};
+    result.rows.forEach(row => {
+      const { draw_numb, ...rest } = row;
+      map[draw_numb] = Object.values(rest);
+    });
+    return map;
+  } catch (err) {
+    console.error("Error fetch data:", err);
+    return {};
+  }
+};
+
 const fetchHighestVietlottNumb = async (is55 = false) => {
   const table = is55 ? 'vietlott_results_55' : 'vietlott_results_45';
   try {
@@ -122,4 +141,5 @@ module.exports = {
   insertVietlottResult35,
   fetchAllVietlottResult35,
   fetchHighestVietlottNumb35,
+  fetchVietlottResultsInRange,
 };
