@@ -9,6 +9,7 @@ const { pick6NumbersByOrder } = require("./src/analizer/pickNumberRandom");
 const { getNumberKeyList } = require("./src/analizer/numberKeyList");
 
 const { previousNumberAnalizer } = require("./src/analizer/previousNumberAnalizer");
+const { generateNumberByPi } = require("./src/analizer/piBasedGenerator");
 
 const fetchAndSaveResult45 = async () => {
   let drawNumb = await fetchHighestVietlottNumb();
@@ -251,6 +252,8 @@ const main = async () => {
   // await megaAnalize('55')
   await generateNumberFor('45')
   await generateNumberFor('55')
+  console.log('pi-based 45:', await generateNumberByPi('45'))
+  console.log('pi-based 55:', await generateNumberByPi('55'))
 };
 
 main();

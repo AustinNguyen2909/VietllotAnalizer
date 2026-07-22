@@ -6,7 +6,7 @@ const {
 async function  previousNumberAnalizer(
   type,
   number,
-  range = 100
+  range = 400
 ) {
   const is55 = type === '55';
   const currentDrawNumb = number ?? (await fetchHighestVietlottNumb(is55));
