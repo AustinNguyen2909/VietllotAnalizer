@@ -1,12 +1,15 @@
 const { previousNumberAnalizer } = require("./previousNumberAnalizer");
 const { getNumberKeyList } = require("./numberKeyList");
-const { piHexDigit } = require("./piDigit");
+const { piDecimalDigit } = require("./piDigit");
 const {
   fetchHighestVietlottNumb,
   fetchVietlottResultsInRange,
   fetchAllVietlottResult45,
   fetchAllVietlottResult55,
 } = require("../storage/storage");
+
+const mySpecialNumber = [5, 7, 9, 15, 19, 30];
+const mySpecialNumberString = mySpecialNumber.join(',');
 
 const MAX_NUMBER = { '45': 45, '55': 55 };
 
@@ -23,13 +26,14 @@ const parseEntry = (entry) => {
 const randomIntInclusive = (max) => Math.floor(Math.random() * (max + 1));
 
 const generateNumberByPi = async (type, range = 400, maxAttempts = 200) => {
+  console.log(`--------${type}--------`)
   const is55 = type === '55';
   const maxValue = MAX_NUMBER[type];
 
   const currentDrawNumb = await fetchHighestVietlottNumb(is55);
   const nextDrawNumb = currentDrawNumb + 1;
-  const piDigit = piHexDigit(nextDrawNumb);
-  console.log(`next draw #${nextDrawNumb} → pi hex digit = ${piDigit}`);
+  const piDigit = piDecimalDigit(nextDrawNumb);
+  console.log(`next draw #${nextDrawNumb} → pi decimal digit = ${piDigit}`);
 
   const entries = (await previousNumberAnalizer(type, currentDrawNumb, range))
     .map(parseEntry)
@@ -63,9 +67,11 @@ const generateNumberByPi = async (type, range = 400, maxAttempts = 200) => {
     const key = unique.join(',');
     if (numberKeyList.includes(key)) continue;
     console.log(`generated after ${attempt + 1} attempt(s)`);
+    console.log(`Has my number - ${mySpecialNumber.toString()} been called?`, numberKeyList.includes(mySpecialNumberString));
     return unique;
   }
   console.log(`no unseen combination found after ${maxAttempts} attempts`);
+  console.log(`Has my number - ${mySpecialNumber.toString()} been called?`, numberKeyList.includes(mySpecialNumberString));
   return null;
 };
 

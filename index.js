@@ -250,8 +250,8 @@ const main = async () => {
   await checkIfNumberIsDrawnOn35()
   // await megaAnalize('45')
   // await megaAnalize('55')
-  await generateNumberFor('45')
-  await generateNumberFor('55')
+  // await generateNumberFor('45')
+  // await generateNumberFor('55')
   console.log('pi-based 45:', await generateNumberByPi('45'))
   console.log('pi-based 55:', await generateNumberByPi('55'))
 };
