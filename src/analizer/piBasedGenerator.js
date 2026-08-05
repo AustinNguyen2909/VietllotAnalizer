@@ -55,7 +55,7 @@ const generateNumberByPi = async (type, range = 400, maxAttempts = 200) => {
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const perturbed = oldNumbers.map(n => {
-      const delta = randomIntInclusive(piDigit);
+      const delta = randomIntInclusive(piDigit || 1);
       const sign = Math.random() < 0.5 ? -1 : 1;
       let v = n + sign * delta;
       if (v < 1) v = 1;
