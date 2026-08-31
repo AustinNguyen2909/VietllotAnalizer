@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `npm start` — runs `index.js`, which is the single entry point (there is no separate build step, no linter, and no test runner configured; the `npm test` script is a placeholder).
 - `docker compose up -d` — brings up the local Postgres (`vietlott_db`) that the app connects to. Credentials/host come from `.env` via `src/config/config.js` (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`).
+- `npm run db:check` — verifies both the local Postgres and the Supabase pooler connections and prints per-table row counts.
+- `npm run db:schema` — creates the three tables on Supabase without copying data.
+- `npm run db:migrate` — copies all rows from local Postgres to Supabase (`scripts/migrateToSupabase.js`; supports `--tables=45,55,35`, `--batch=N`, `--truncate`, `--dry-run`). Ids are preserved and inserts use `ON CONFLICT (id) DO NOTHING`, so re-running is safe.
 - Schema lives in `db/migrations/001_init.up.sql` and must be applied manually to the running Postgres (no migration runner is wired in). Three tables: `vietlott_results_45`, `vietlott_results_55`, `vietlott_results_35`.
 
 To change what actually runs, edit the `main()` function at the bottom of `index.js` — it's the orchestration surface. Comment/uncomment the calls (`fetAndSaveAllResults`, `mega45Analize`, `generateNumberFor45`, `generateNumberFor55`, `checkIfNumberIsDrawnOn35`, `runTest`, etc.) to select the workflow for a run.

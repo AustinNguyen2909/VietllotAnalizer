@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:check": "node scripts/migrateToSupabase.js --check",
+    "db:schema": "node scripts/migrateToSupabase.js --schema-only",
+    "db:migrate": "node scripts/migrateToSupabase.js"
   },
   "keywords": [
     "node",
