@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 - `npm start` — runs `index.js`, which is the single entry point (there is no separate build step, no linter, and no test runner configured; the `npm test` script is a placeholder).
-- `docker compose up -d` — brings up the local Postgres (`vietlott_db`) that the app connects to. Credentials/host come from `.env` via `src/config/config.js` (`DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`).
+- `docker compose up -d` — brings up the local Postgres (`vietlott_db`) used as the source for migration scripts. The running app connects to Supabase using `SUPABASE_DB_URL` or the `SUPABASE_DB_*` settings in `.env`.
 - `npm run db:check` — verifies both the local Postgres and the Supabase pooler connections and prints per-table row counts.
 - `npm run db:schema` — creates the three tables on Supabase without copying data.
 - `npm run db:migrate` — copies all rows from local Postgres to Supabase (`scripts/migrateToSupabase.js`; supports `--tables=45,55,35`, `--batch=N`, `--truncate`, `--dry-run`). Ids are preserved and inserts use `ON CONFLICT (id) DO NOTHING`, so re-running is safe.
@@ -24,7 +24,7 @@ The app is a pipeline over three Vietlott lottery products (Mega 6/45, Power 6/5
 Data flow, top to bottom:
 
 1. **Fetcher (`src/fetcher/`)** — `fetcher.js` posts to Vietlott's internal `ajaxpro` endpoint per draw ID, one endpoint per product. Draw IDs are zero-padded to 5 digits. Each request carries hard-coded headers (cookies, CSRF tokens, `x-ajax-token`) copied from a browser session — these expire and will need to be refreshed when fetches start returning empty/failing. `utils.js` holds the `extractLotteryNumbers*` parsers that turn the ajaxpro response into `{ drawDate, numbers, bonus }`.
-2. **Storage (`src/storage/storage.js`)** — thin `pg` wrapper. One `Pool` shared across all queries. Each product has its own insert/fetchAll/highest-draw-number helpers. `fetchAll*` returns `number[][]` sorted by `draw_numb` ascending (draw number is stripped from the row before returning) — downstream analyzers assume this shape.
+2. **Storage (`src/storage/storage.js`)** — thin Supabase `pg` wrapper. One pool shared across all queries. Each product has its own insert/fetchAll/highest-draw-number helpers. `fetchAll*` returns `number[][]` sorted by `draw_numb` ascending (draw number is stripped from the row before returning) — downstream analyzers assume this shape.
 3. **Analyzers (`src/analizer/`)** — pure functions over the `number[][]` draw history:
    - `frequencyAnalize.js` — per-number and per-position frequencies, plus pair frequencies.
    - `gapAnalize.js` — computes the sorted gaps between consecutive numbers in a draw (e.g. `[3, 8, 15, 20, 33, 40]` → `[5,7,5,13,7]`) and ranks gap patterns; `transformGapNumberToDot` is a display helper that renders counts as dot strings.

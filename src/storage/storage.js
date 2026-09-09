@@ -1,15 +1,26 @@
 const { Pool } = require("pg");
 const config = require("../config/config");
 
-const pool = new Pool(config.db);
+if (!config.supabase.connectionString) {
+  throw new Error("Missing Supabase database credentials. Set SUPABASE_DB_URL or SUPABASE_DB_HOST/USER/PASSWORD in .env.");
+}
+
+// The application reads and writes directly to Supabase. The local database
+// configuration remains available to scripts/migrateToSupabase.js as the
+// migration source, but is no longer used by the running application.
+const pool = new Pool({
+  connectionString: config.supabase.connectionString,
+  ssl: config.supabase.ssl,
+  max: 5,
+});
 
 const insertVietlottResult45 = async (drawDate, drawNumb, numbers) => {
   const query = `INSERT INTO vietlott_results_45 (draw_date, draw_numb, number1, number2, number3, number4, number5, number6) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
   try {
     await pool.query(query, [drawDate, drawNumb, numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], numbers[5]]);
-    console.log("Data inserted successfully.");
   } catch (err) {
-    console.error("Error inserting data:", err);
+    console.error("Error inserting 45 result:", err);
+    throw err;
   }
 };
 
@@ -17,9 +28,9 @@ const insertVietlottResult55 = async (drawDate, drawNumb, numbers, special) => {
   const query = `INSERT INTO vietlott_results_55 (draw_date, draw_numb, number1, number2, number3, number4, number5, number6, numberextra) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`;
   try {
     await pool.query(query, [drawDate, drawNumb, numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], numbers[5], special]);
-    console.log("Data inserted successfully.");
   } catch (err) {
-    console.error("Error inserting data:", err);
+    console.error("Error inserting 55 result:", err);
+    throw err;
   }
 };
 
@@ -27,9 +38,9 @@ const insertVietlottResult35 = async (drawDate, drawNumb, numbers, special) => {
   const query = `INSERT INTO vietlott_results_35 (draw_date, draw_numb, number1, number2, number3, number4, number5, numberextra) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
   try {
     await pool.query(query, [drawDate, drawNumb, numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], special]);
-    console.log("Data inserted successfully.");
   } catch (err) {
-    console.error("Error inserting data:", err);
+    console.error("Error inserting 35 result:", err);
+    throw err;
   }
 };
 
@@ -43,7 +54,7 @@ const fetchAllVietlottResult45 = async () => {
     }); // [{ number1: 1, ..., number6: 45 }, ...]
     return allDraws.map(row => Object.values(row))
   } catch (err) {
-    console.error("Error inserting data:", err);
+    console.error("Error fetching 45 results:", err);
     return []
   }
 }
@@ -57,7 +68,7 @@ const fetchAllVietlottResult55 = async () => {
     }); // [{ number1: 1, ..., number6: 45 }, ...]
     return allDraws.map(row => Object.values(row))
   } catch (err) {
-    console.error("Error inserting data:", err);
+    console.error("Error fetching 55 results:", err);
     return []
   }
 }
@@ -71,7 +82,7 @@ const fetchAllVietlottResult35 = async () => {
     }); // [{ number1: 1, ..., number6: 45 }, ...]
     return allDraws.map(row => Object.values(row))
   } catch (err) {
-    console.error("Error inserting data:", err);
+    console.error("Error fetching 35 results:", err);
     return []
   }
 }
@@ -79,7 +90,7 @@ const fetchAllVietlottResult35 = async () => {
 const fetchVietlottResultNumb = async (numb = 0, is55 = false) => {
   const table = is55 ? 'vietlott_results_55' : 'vietlott_results_45';
   try {
-    const result = await pool.query(`SELECT number1, number2, number3, number4, number5, number6 FROM ${table} WHERE draw_numb = '${numb}';`);
+    const result = await pool.query(`SELECT number1, number2, number3, number4, number5, number6 FROM ${table} WHERE draw_numb = $1;`, [numb]);
     const findDraw = result.rows?.length ? Object.values(result.rows[0]) : []; // [{ number1: 1, ..., number6: 45 }, ...]
     return findDraw;
   } catch (err) {

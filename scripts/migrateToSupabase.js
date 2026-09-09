@@ -11,7 +11,6 @@
  *   --check             only test both connections and print row counts
  *   --dry-run           read from local + report, write nothing
  *   --url=<conn string> override the Supabase connection string for this run
- * postgresql://postgres:[YOUR-PASSWORD]@db.ewidfqyceqzpqdeebobp.supabase.co:5432/postgres
  *
  * Connection comes from .env — see .env.example.
  */
